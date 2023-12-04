@@ -1,0 +1,125 @@
+{
+    "seed": 1,
+
+    "decoder": {
+        "unets": [
+            {
+                "dim": 320,
+                "cond_dim": 512,
+                "image_embed_dim": 768,
+                "text_embed_dim": 768,
+                "cond_on_text_encodings": true,
+                "channels": 3,
+                "dim_mults": [1, 2, 3, 4],
+                "num_resnet_blocks": 4,
+                "attn_heads": 8,
+                "attn_dim_head": 64,
+                "sparse_attn": true,
+                "memory_efficient": true,
+		        "self_attn": [false, true, true, true]
+            }
+        ],
+        "clip": {
+            "make": "openai",
+            "model": "ViT-L/14"
+        },
+        "image_sizes": [64],
+        "channels": 3,
+        "timesteps": 1000,
+        "loss_type": "l2",
+        "beta_schedule": ["cosine"],
+        "learned_variance": true
+    },
+    "data": {
+        "webdataset_base_url": "pipe:aws s3 cp --quiet s3://s-datasets/laion5b/laion2B-data/{}.tar -",
+        "num_workers": 12,
+        "batch_size": 26,
+        "start_shard": 0,
+        "end_shard": 231349,
+        "shard_width": 6,
+        "index_width": 4,
+        "splits": {
+            "train": 0.75,
+            "val": 0.15,
+            "test": 0.1
+        },
+        "shuffle_train": false,
+        "resample_train": true,
+        "preprocessing": {
+            "RandomResizedCrop": {
+                "size": [224, 224],
+                "scale": [0.75, 1.0],
+                "ratio": [1.0, 1.0]
+            },
+            "ToTensor": true
+        }
+    },
+    "train": {
+        "epochs": 1000,
+        "lr": 1e-4,
+        "wd": 0.01,
+        "max_grad_norm": 0.5,
+        "save_every_n_samples": 5000000,
+        "n_sample_images": 10,
+        "device": "cuda:0",
+        "epoch_samples": 10000000,
+        "validation_samples": 100000,
+        "use_ema": true,
+        "ema_beta": 0.99,
+        "unet_training_mask": [true]
+    },
+    "evaluate": {
+        "n_evaluation_samples": 30,
+        "FID": {
+            "feature": 64
+        },
+        "LPIPS": {
+            "net_type": "vgg",
+            "reduction": "mean"
+        }
+    },
+    "tracker": {
+        "data_path": "/fsx/aidan/new/multinode/experiments/decoder_first_stage/.tracker-data",
+        "overwrite_data_path": true,
+
+        "log": {
+            "log_type": "wandb",
+
+            "wandb_entity": "Veldrovive",
+            "wandb_project": "dalle2_train_decoder",
+            "wandb_resume": false,
+
+            "auto_resume": true,
+            "verbose": true
+        },
+
+        "load": {
+            "load_from": "local",
+            "only_auto_resume": true,
+	        "file_path": "/fsx/aidan/new/multinode/experiments/decoder_first_stage/models/checkpoints/latest.pth"
+        },
+
+        "save": [
+        {
+            "save_to": "huggingface",
+            "huggingface_repo": "laion/DALLE2-PyTorch",
+
+            "save_meta_to": "decoder/v1.0.2/",
+            "save_latest_to": "decoder/v1.0.2/latest.pth",
+
+            "save_type": "model"
+        },{
+            "save_to": "huggingface",
+            "huggingface_repo": "laion/DALLE2-PyTorch",
+
+            "save_latest_to": "decoder/v1.0.2/checkpoints/latest.pth",
+
+            "save_type": "checkpoint"
+        },{
+            "save_to": "local",
+            "save_latest_to": "/fsx/aidan/new/multinode/experiments/decoder_first_stage/models/checkpoints/latest.pth",
+
+            "save_type": "checkpoint"
+        }]
+    }
+}
