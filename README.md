@@ -1,2 +1,2 @@
 # semantic_compression
-The semantic compression model.
+The implementation of the algorithm for semantic compression of an image with DALL·E 2.
